@@ -14,27 +14,29 @@ export default function Tickets() {
 
   async function fetchAndUpdateData(sortOrderValue, filterValue) {
     setLoading(true);
+    setError(false); // Reset error state before fetching new data
     try {
       let queryParams = {};
       if (filterValue) {
-        queryParams.category = filterValue;
+        queryParams.filter = filterValue;
       }
 
       if (sortOrderValue) {
-        queryParams._sort = "price";
-        queryParams._order = sortOrderValue;
+        queryParams.sort = "price";
+        queryParams.order = sortOrderValue;
       }
-      let response = await axios({
-        method: "GET",
-        url: `https://dbioz2ek0e.execute-api.ap-south-1.amazonaws.com/mockapi/get-products`,
-        params: queryParams,
-      });
-      let data = response.data.data;
-      setLoading(false);
+
+      const response = await axios.get(
+        `https://dbioz2ek0e.execute-api.ap-south-1.amazonaws.com/mockapi/get-products`,
+        { params: queryParams }
+      );
+
+      const data = response.data.data;
       setProducts(data);
     } catch (error) {
-      setLoading(false);
       setError(true);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -45,8 +47,9 @@ export default function Tickets() {
   if (loading) {
     return <LoadingIndicator />;
   }
+
   if (error) {
-    return <ErrorIndictor />;
+    return <ErrorIndictor message="Failed to fetch products. Please try again later." />;
   }
 
   return (
@@ -61,9 +64,7 @@ export default function Tickets() {
           width={{ base: "100%", md: "40%" }}
           mb={{ base: 4, md: 0 }}
           value={sortOrderValue}
-          onChange={(e) => {
-            setSortOrderValue(e.target.value);
-          }}
+          onChange={(e) => setSortOrderValue(e.target.value)}
         >
           <option value="asc">Low to High</option>
           <option value="desc">High to Low</option>
@@ -73,9 +74,7 @@ export default function Tickets() {
           width={{ base: "100%", md: "40%" }}
           mb={{ base: 4, md: 0 }}
           value={filterValue}
-          onChange={(e) => {
-            setFilterValue(e.target.value);
-          }}
+          onChange={(e) => setFilterValue(e.target.value)}
         >
           <option value="">All Categories</option>
           <option value="men">Men</option>
@@ -87,7 +86,7 @@ export default function Tickets() {
       <Flex>
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={10}>
           {products.map((product) => (
-            <ProductCard {...product} key={product.id} />
+            <ProductCard key={product.id} {...product} />
           ))}
         </SimpleGrid>
       </Flex>
